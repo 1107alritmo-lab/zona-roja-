@@ -357,11 +357,10 @@ class StaffModal(discord.ui.Modal, title="Postulación al Staff"):
     motivacion = discord.ui.TextInput(label="Motivación y disponibilidad", style=discord.TextStyle.paragraph, placeholder="¿Por qué querés ser staff?", required=True)
 
     async def on_submit(self, interaction: discord.Interaction):
-        CANAL_REVISION_STAFF = 1556181602181316659  # ID de canal exclusivo para Staff
+        # ID FIJO Y DIRECTO PARA STAFF (1556181602181316659)
+        CANAL_REVISION_STAFF = 1556181602181316659
         
-        channel = interaction.guild.get_channel(CANAL_REVISION_STAFF)
-        if not channel:
-            channel = interaction.client.get_channel(CANAL_REVISION_STAFF)
+        channel = interaction.guild.get_channel(CANAL_REVISION_STAFF) or interaction.client.get_channel(CANAL_REVISION_STAFF)
 
         if not channel:
             await interaction.response.send_message("❌ Error: El bot no encuentra el canal de Staff.", ephemeral=True)
@@ -378,7 +377,7 @@ class StaffModal(discord.ui.Modal, title="Postulación al Staff"):
         embed.add_field(name="🟡 Nombre (OOC)", value=self.nombre.value, inline=True)
         embed.add_field(name="🌍 País", value=self.pais.value, inline=True)
         embed.add_field(name="🎂 Edad", value=self.edad.value, inline=True)
-        embed.add_field(name="⚖️ Sanciones", value=self.sanciones.value, inline=False)
+        embed.add_field(name="⚖️️ Sanciones", value=self.sanciones.value, inline=False)
         embed.add_field(name="💼 Motivación y disponibilidad", value=self.motivacion.value, inline=False)
         embed.set_footer(text=f"Zona Roja RP • ID: {interaction.user.id}")
         embed.timestamp = discord.utils.utcnow()
@@ -390,7 +389,7 @@ class PostulacionStaffView(discord.ui.View):
     def __init__(self):
         super().__init__(timeout=None)
     
-    @discord.ui.button(label="Postularse a Staff", style=discord.ButtonStyle.danger, custom_id="btn_modal_staff_fixed_id")
+    @discord.ui.button(label="Postularse a Staff", style=discord.ButtonStyle.danger, custom_id="btn_modal_staff_absolute_fixed")
     async def abrir_modal(self, interaction: discord.Interaction, button: discord.ui.Button):
         await interaction.response.send_modal(StaffModal())
 
@@ -403,11 +402,10 @@ class StreamerModal(discord.ui.Modal, title="Postulación a Streamer"):
     horarios = discord.ui.TextInput(label="Días y Horarios de Directo", style=discord.TextStyle.paragraph, placeholder="¿Qué días streameas?", required=True)
 
     async def on_submit(self, interaction: discord.Interaction):
-        CANAL_REVISION_STREAMER = 1556181560451932170  # ID de canal exclusivo para Streamers
+        # ID FIJO Y DIRECTO PARA STREAMERS (1556181560451932170)
+        CANAL_REVISION_STREAMER = 1556181560451932170
         
-        channel = interaction.guild.get_channel(CANAL_REVISION_STREAMER)
-        if not channel:
-            channel = interaction.client.get_channel(CANAL_REVISION_STREAMER)
+        channel = interaction.guild.get_channel(CANAL_REVISION_STREAMER) or interaction.client.get_channel(CANAL_REVISION_STREAMER)
 
         if not channel:
             await interaction.response.send_message("❌ Error: El bot no encuentra el canal de Streamers.", ephemeral=True)
@@ -435,7 +433,7 @@ class PostulacionStreamerView(discord.ui.View):
     def __init__(self):
         super().__init__(timeout=None)
     
-    @discord.ui.button(label="Postularse a Streamer", style=discord.ButtonStyle.primary, custom_id="btn_modal_streamer_fixed_id")
+    @discord.ui.button(label="Postularse a Streamer", style=discord.ButtonStyle.primary, custom_id="btn_modal_streamer_absolute_fixed")
     async def abrir_modal(self, interaction: discord.Interaction, button: discord.ui.Button):
         await interaction.response.send_modal(StreamerModal())
 
@@ -805,5 +803,4 @@ TOKEN = os.getenv("DISCORD_TOKEN")
 if not TOKEN:
     print("❌ ERROR CRÍTICO: No se encontró el token en las variables de entorno.")
 else:
-TOKEN = os.getenv("DISCORD_TOKEN")
-bot.run(TOKEN)
+    bot.run(TOKEN)
