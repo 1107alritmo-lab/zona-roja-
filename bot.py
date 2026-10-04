@@ -86,7 +86,7 @@ async def on_member_join(member: discord.Member):
     bienvenidas_recientes[member.id] = tiempo_actual
 
     CANAL_BIENVENIDA_ID = 1555483618158059622  
-    ROL_CIVIL_ID = 1555483327010578452         
+    ROL_CIVIL_ID = 1520644757724991568         
     CANAL_INVITES_ID = 1556075158383632475
 
     guild = member.guild
@@ -261,13 +261,13 @@ class TicketButtonsView(discord.ui.View):
 @bot.tree.command(name="setup-tickets", description="Envía el panel de tickets oficial")
 @app_commands.checks.has_permissions(administrator=True)
 async def setup_tickets(interaction: discord.Interaction):
-    await interaction.response.send_message("⚙ Generando panel de tickets...", ephemeral=True)
     embed = discord.Embed(
         title="Soporte Técnico de Zona Roja RP",
         description="❓ **¿Necesitas ayuda?**\nSi necesitas ayuda, solo abrí ticket y nuestro Staff te asistirá lo más rápido posible.",
         color=discord.Color.from_rgb(255, 0, 0)
     )
     await interaction.channel.send(embed=embed, view=TicketButtonsView())
+    await interaction.response.send_message("✅ Panel de tickets enviado correctamente.", ephemeral=True)
 
 
 # ==========================================
@@ -326,7 +326,7 @@ class StaffModal(discord.ui.Modal, title="Postulación al Staff"):
         channel = interaction.guild.get_channel(CANAL_REVISION_STAFF)
 
         embed = discord.Embed(
-            title="✉️ Postulación al Staff",
+            title="✉️️ Postulación al Staff",
             description="Se registró una nueva postulación al Staff.",
             color=discord.Color.from_rgb(241, 196, 15)
         )
@@ -414,13 +414,13 @@ class FaccionesSelectView(discord.ui.View):
 @bot.tree.command(name="facciones", description="Envía el panel oficial de Facciones")
 @app_commands.checks.has_permissions(administrator=True)
 async def cmd_facciones(interaction: discord.Interaction):
-    await interaction.response.send_message("⚙ Generando panel...", ephemeral=True)
     embed = discord.Embed(
         title="💀 Panel de Facciones — Zona Roja RP",
         description="🏙️ **¡Bienvenido al panel oficial de Facciones!**\n👇 Seleccioná la que te interese en el menú de abajo.",
         color=discord.Color.from_rgb(0, 229, 255)
     )
     await interaction.channel.send(embed=embed, view=FaccionesSelectView())
+    await interaction.response.send_message("✅ Panel de facciones enviado correctamente.", ephemeral=True)
 
 
 # ==========================================
@@ -527,7 +527,7 @@ async def cmd_encuesta(interaction: discord.Interaction):
 @app_commands.checks.has_permissions(administrator=True)
 async def cmd_block(interaction: discord.Interaction):
     canal = interaction.channel
-    ROL_CIVIL_ID = 1555483327010578452
+    ROL_CIVIL_ID = 1520644757724991568
     rol_civil = interaction.guild.get_role(ROL_CIVIL_ID)
 
     if not rol_civil:
@@ -544,7 +544,7 @@ async def cmd_block(interaction: discord.Interaction):
 @app_commands.checks.has_permissions(administrator=True)
 async def cmd_unblock(interaction: discord.Interaction):
     canal = interaction.channel
-    ROL_CIVIL_ID = 1555483327010578452
+    ROL_CIVIL_ID = 1520644757724991568
     rol_civil = interaction.guild.get_role(ROL_CIVIL_ID)
 
     if not rol_civil:
@@ -564,16 +564,16 @@ async def cmd_unblock(interaction: discord.Interaction):
 @bot.tree.command(name="staff", description="Envía el panel oficial para postularse a Staff")
 @app_commands.checks.has_permissions(administrator=True)
 async def cmd_staff(interaction: discord.Interaction):
-    await interaction.response.send_message("⚙ Generando panel...", ephemeral=True)
     embed = discord.Embed(title="Postulaciones - Staff", description="Haz clic abajo para postularte.", color=discord.Color.red())
     await interaction.channel.send(embed=embed, view=PostulacionStaffView())
+    await interaction.response.send_message("✅ Panel de staff enviado correctamente.", ephemeral=True)
 
 @bot.tree.command(name="streamers", description="Envía el panel oficial para postularse a Streamer")
 @app_commands.checks.has_permissions(administrator=True)
 async def cmd_streamers(interaction: discord.Interaction):
-    await interaction.response.send_message("⚙ Generando panel...", ephemeral=True)
     embed = discord.Embed(title="Postulaciones - Streamers", description="Haz clic abajo para postularte.", color=discord.Color.gold())
     await interaction.channel.send(embed=embed, view=PostulacionStreamerView())
+    await interaction.response.send_message("✅ Panel de streamers enviado correctamente.", ephemeral=True)
 
 
 # ==========================================
@@ -673,7 +673,7 @@ async def cmd_vivo(interaction: discord.Interaction):
 # ==========================================
 TOKEN = os.getenv("DISCORD_TOKEN")
 if not TOKEN:
-    print("❌ ERROR CRÍTICO: No se encontró el token en el archivo .env.")
+    print("❌ ERROR CRÍTICO: No se encontró el token en las variables de entorno.")
 else:
-    TOKEN = os.getenv("DISCORD_TOKEN")
+   TOKEN = os.getenv("DISCORD_TOKEN")
 bot.run(TOKEN)
