@@ -43,7 +43,6 @@ class UltimateBot(commands.Bot):
         self.add_view(PostulacionStaffView())
         self.add_view(PostulacionStreamerView())
         self.add_view(FaccionesSelectView())
-        self.add_view(DecisionReviewView()) 
         await self.tree.sync()
         print("¡Comandos de barra sincronizados y vistas cargadas con éxito!")
 
@@ -275,77 +274,43 @@ async def setup_tickets(interaction: discord.Interaction):
 
 
 # ==========================================
-# 4. SISTEMA DE POSTULACIONES Y REVISIÓN
+# 4. SISTEMA DE POSTULACIONES DIRECTAS A TICKET
 # ==========================================
-class DecisionReviewView(discord.ui.View):
-    def __init__(self):
-        super().__init__(timeout=None)
+async def crear_ticket_postulacion(interaction: discord.Interaction, titulo: str, embed: discord.Embed):
+    if not interaction.response.is_done():
+        await interaction.response.defer(ephemeral=True)
 
-    @discord.ui.button(label="Aceptar", style=discord.ButtonStyle.success, custom_id="post_aceptar_persistent")
-    async def aceptar(self, interaction: discord.Interaction, button: discord.ui.Button):
-        if not interaction.response.is_done():
-            await interaction.response.defer()
-        embed = interaction.message.embeds[0]
-        footer_text = embed.footer.text if embed.footer else ""
-        user_id = None
-        for part in footer_text.split("•"):
-            if "ID:" in part:
-                try:
-                    user_id = int(part.replace("ID:", "").strip())
-                except ValueError:
-                    pass
+    guild = interaction.guild
+    member = interaction.user
+    ROL_STAFF_ID = 1520644695779180644  
+    rol_staff = guild.get_role(ROL_STAFF_ID)
 
-        for item in self.children:
-            item.disabled = True
-            
-        embed.color = discord.Color.green()
-        for i, field in enumerate(embed.fields):
-            if "Estado" in field.name:
-                embed.set_field_at(i, name="⏳ Estado", value=f"✅ Aceptado por {interaction.user.name}", inline=False)
-                break
-                
-        await interaction.message.edit(embed=embed, view=self)
+    overwrites = {
+        guild.default_role: discord.PermissionOverwrite(view_channel=False),
+        member: discord.PermissionOverwrite(view_channel=True, send_messages=True, read_message_history=True),
+        guild.me: discord.PermissionOverwrite(view_channel=True, send_messages=True, manage_channels=True)
+    }
+    if rol_staff:
+        overwrites[rol_staff] = discord.PermissionOverwrite(view_channel=True, send_messages=True, read_message_history=True)
 
-        if user_id:
-            try:
-                user = await interaction.client.fetch_user(user_id)
-                if user:
-                    await user.send("🎉 ¡Felicidades! Tu postulación ha sido **APROBADA**. Abre ticket en el servidor para continuar.")
-            except Exception as e:
-                print(f"No se pudo enviar MD al usuario: {e}")
+    ticket_channel = await guild.create_text_channel(
+        name=f"postulacion-{member.name}",
+        overwrites=overwrites,
+        topic=f"Postulación de {member.name}"
+    )
 
-    @discord.ui.button(label="Rechazar", style=discord.ButtonStyle.danger, custom_id="post_rechazar_persistent")
-    async def rechazar(self, interaction: discord.Interaction, button: discord.ui.Button):
-        if not interaction.response.is_done():
-            await interaction.response.defer()
-        embed = interaction.message.embeds[0]
-        footer_text = embed.footer.text if embed.footer else ""
-        user_id = None
-        for part in footer_text.split("•"):
-            if "ID:" in part:
-                try:
-                    user_id = int(part.replace("ID:", "").strip())
-                except ValueError:
-                    pass
+    mencion_staff = rol_staff.mention if rol_staff else "<@&1520644695779180644>"
 
-        for item in self.children:
-            item.disabled = True
-            
-        embed.color = discord.Color.red()
-        for i, field in enumerate(embed.fields):
-            if "Estado" in field.name:
-                embed.set_field_at(i, name="⏳ Estado", value=f"❌ Rechazado por {interaction.user.name}", inline=False)
-                break
-                
-        await interaction.message.edit(embed=embed, view=self)
+    class CloseTicketView(discord.ui.View):
+        @discord.ui.button(label="Cerrar Ticket", style=discord.ButtonStyle.danger, emoji="🔒")
+        async def cerrar(self, inter: discord.Interaction, button: discord.ui.Button):
+            if not inter.response.is_done():
+                await inter.response.send_message("🔒 Cerrando canal en 5 segundos...")
+            await asyncio.sleep(5)
+            await inter.channel.delete()
 
-        if user_id:
-            try:
-                user = await interaction.client.fetch_user(user_id)
-                if user:
-                    await user.send("❌ Hola, tu postulación ha sido **rechazada** en esta ocasión. ¡Gracias por participar!")
-            except Exception as e:
-                print(f"No se pudo enviar MD al usuario: {e}")
+    await ticket_channel.send(content=f"{member.mention} {mencion_staff} ¡Nueva postulación recibida!", embed=embed, view=CloseTicketView())
+    await interaction.followup.send(f"✅ ¡Tu postulación ha sido enviada! Se ha creado un ticket para evaluarla: {ticket_channel.mention}", ephemeral=True)
 
 
 # --- MODAL Y VISTA STAFF ---
@@ -357,39 +322,27 @@ class StaffModal(discord.ui.Modal, title="Postulación al Staff"):
     motivacion = discord.ui.TextInput(label="Motivación y disponibilidad", style=discord.TextStyle.paragraph, placeholder="¿Por qué querés ser staff?", required=True)
 
     async def on_submit(self, interaction: discord.Interaction):
-        # ID FIJO Y DIRECTO PARA STAFF (1556181602181316659)
-        CANAL_REVISION_STAFF = 1556181602181316659
-        
-        channel = interaction.guild.get_channel(CANAL_REVISION_STAFF) or interaction.client.get_channel(CANAL_REVISION_STAFF)
-
-        if not channel:
-            await interaction.response.send_message("❌ Error: El bot no encuentra el canal de Staff.", ephemeral=True)
-            return
-
         embed = discord.Embed(
             title="✉️ Postulación al Staff",
-            description="Se registró una nueva postulación al Staff.",
+            description=f"Postulación enviada por {interaction.user.mention}",
             color=discord.Color.from_rgb(241, 196, 15)
         )
         embed.set_author(name=interaction.user.name, icon_url=interaction.user.display_avatar.url)
-        embed.add_field(name="⏳ Estado", value="Pendiente de revisión", inline=False)
-        embed.add_field(name="👤 Usuario", value=interaction.user.mention, inline=True)
         embed.add_field(name="🟡 Nombre (OOC)", value=self.nombre.value, inline=True)
         embed.add_field(name="🌍 País", value=self.pais.value, inline=True)
         embed.add_field(name="🎂 Edad", value=self.edad.value, inline=True)
-        embed.add_field(name="⚖️️ Sanciones", value=self.sanciones.value, inline=False)
+        embed.add_field(name="⚖️ Sanciones", value=self.sanciones.value, inline=False)
         embed.add_field(name="💼 Motivación y disponibilidad", value=self.motivacion.value, inline=False)
         embed.set_footer(text=f"Zona Roja RP • ID: {interaction.user.id}")
         embed.timestamp = discord.utils.utcnow()
 
-        await channel.send(embed=embed, view=DecisionReviewView())
-        await interaction.response.send_message("✅ ¡Tu postulación al Staff ha sido enviada con éxito!", ephemeral=True)
+        await crear_ticket_postulacion(interaction, "staff", embed)
 
 class PostulacionStaffView(discord.ui.View):
     def __init__(self):
         super().__init__(timeout=None)
     
-    @discord.ui.button(label="Postularse a Staff", style=discord.ButtonStyle.danger, custom_id="btn_modal_staff_absolute_fixed")
+    @discord.ui.button(label="Postularse a Staff", style=discord.ButtonStyle.danger, custom_id="btn_modal_staff_ticket_mode")
     async def abrir_modal(self, interaction: discord.Interaction, button: discord.ui.Button):
         await interaction.response.send_modal(StaffModal())
 
@@ -402,23 +355,12 @@ class StreamerModal(discord.ui.Modal, title="Postulación a Streamer"):
     horarios = discord.ui.TextInput(label="Días y Horarios de Directo", style=discord.TextStyle.paragraph, placeholder="¿Qué días streameas?", required=True)
 
     async def on_submit(self, interaction: discord.Interaction):
-        # ID FIJO Y DIRECTO PARA STREAMERS (1556181560451932170)
-        CANAL_REVISION_STREAMER = 1556181560451932170
-        
-        channel = interaction.guild.get_channel(CANAL_REVISION_STREAMER) or interaction.client.get_channel(CANAL_REVISION_STREAMER)
-
-        if not channel:
-            await interaction.response.send_message("❌ Error: El bot no encuentra el canal de Streamers.", ephemeral=True)
-            return
-
         embed = discord.Embed(
             title="📺 Postulación a Streamer",
-            description="Se registró una nueva postulación para Streamer.",
+            description=f"Postulación enviada por {interaction.user.mention}",
             color=discord.Color.from_rgb(241, 196, 15)
         )
         embed.set_author(name=interaction.user.name, icon_url=interaction.user.display_avatar.url)
-        embed.add_field(name="⏳ Estado", value="Pendiente de revisión", inline=False)
-        embed.add_field(name="👤 Usuario", value=interaction.user.mention, inline=True)
         embed.add_field(name="🔗 Canal", value=self.nombre.value, inline=True)
         embed.add_field(name="📱 Plataforma", value=self.plataforma.value, inline=True)
         embed.add_field(name="👥 Viewers Promedio", value=self.viewers.value, inline=True)
@@ -426,14 +368,13 @@ class StreamerModal(discord.ui.Modal, title="Postulación a Streamer"):
         embed.set_footer(text=f"Zona Roja RP • ID: {interaction.user.id}")
         embed.timestamp = discord.utils.utcnow()
 
-        await channel.send(embed=embed, view=DecisionReviewView())
-        await interaction.response.send_message("✅ ¡Tu postulación a Streamer fue enviada con éxito!", ephemeral=True)
+        await crear_ticket_postulacion(interaction, "streamer", embed)
 
 class PostulacionStreamerView(discord.ui.View):
     def __init__(self):
         super().__init__(timeout=None)
     
-    @discord.ui.button(label="Postularse a Streamer", style=discord.ButtonStyle.primary, custom_id="btn_modal_streamer_absolute_fixed")
+    @discord.ui.button(label="Postularse a Streamer", style=discord.ButtonStyle.primary, custom_id="btn_modal_streamer_ticket_mode")
     async def abrir_modal(self, interaction: discord.Interaction, button: discord.ui.Button):
         await interaction.response.send_modal(StreamerModal())
 
