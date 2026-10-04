@@ -351,8 +351,16 @@ class StaffModal(discord.ui.Modal, title="Postulación al Staff"):
     motivacion = discord.ui.TextInput(label="Motivación y disponibilidad", style=discord.TextStyle.paragraph, placeholder="¿Por qué querés ser staff?", required=True)
 
     async def on_submit(self, interaction: discord.Interaction):
-        CANAL_REVISION_STAFF = 1556181602181316659  # ID configurado para Staff
-        channel = interaction.client.get_channel(CANAL_REVISION_STAFF) or interaction.guild.get_channel(CANAL_REVISION_STAFF)
+        CANAL_REVISION_STAFF = 1556181602181316659
+        
+        # Búsqueda directa y forzada del canal en el servidor actual
+        channel = interaction.guild.get_channel(CANAL_REVISION_STAFF)
+        if not channel:
+            channel = interaction.client.get_channel(CANAL_REVISION_STAFF)
+
+        if not channel:
+            await interaction.response.send_message("❌ Error: El bot no encuentra el canal de Staff. Verifica que el ID sea correcto y el bot tenga permisos de ver y escribir allí.", ephemeral=True)
+            return
 
         embed = discord.Embed(
             title="✉️ Postulación al Staff",
@@ -370,17 +378,14 @@ class StaffModal(discord.ui.Modal, title="Postulación al Staff"):
         embed.set_footer(text=f"Zona Roja RP • ID: {interaction.user.id}")
         embed.timestamp = discord.utils.utcnow()
 
-        if channel:
-            await channel.send(embed=embed, view=DecisionReviewView())
-            await interaction.response.send_message("✅ ¡Tu postulación ha sido enviada con éxito!", ephemeral=True)
-        else:
-            await interaction.response.send_message("❌ Error: No se encontró el canal de revisión de Staff configurado.", ephemeral=True)
+        await channel.send(embed=embed, view=DecisionReviewView())
+        await interaction.response.send_message("✅ ¡Tu postulación al Staff ha sido enviada con éxito!", ephemeral=True)
 
 class PostulacionStaffView(discord.ui.View):
     def __init__(self):
         super().__init__(timeout=None)
     
-    @discord.ui.button(label="Postularse a Staff", style=discord.ButtonStyle.danger, emoji="🛡️", custom_id="btn_modal_staff_v2")
+    @discord.ui.button(label="Postularse a Staff", style=discord.ButtonStyle.danger, emoji="🛡️️", custom_id="btn_modal_staff_v2")
     async def abrir_modal(self, interaction: discord.Interaction, button: discord.ui.Button):
         await interaction.response.send_modal(StaffModal())
 
@@ -392,8 +397,16 @@ class StreamerModal(discord.ui.Modal, title="Postulación a Streamer"):
     horarios = discord.ui.TextInput(label="Días y Horarios de Directo", style=discord.TextStyle.paragraph, placeholder="¿Qué días streameas?", required=True)
 
     async def on_submit(self, interaction: discord.Interaction):
-        CANAL_REVISION_STREAMER = 1556181560451932170  # ID configurado para Streamers
-        channel = interaction.client.get_channel(CANAL_REVISION_STREAMER) or interaction.guild.get_channel(CANAL_REVISION_STREAMER)
+        CANAL_REVISION_STREAMER = 1556181560451932170
+        
+        # Búsqueda directa y forzada del canal en el servidor actual
+        channel = interaction.guild.get_channel(CANAL_REVISION_STREAMER)
+        if not channel:
+            channel = interaction.client.get_channel(CANAL_REVISION_STREAMER)
+
+        if not channel:
+            await interaction.response.send_message("❌ Error: El bot no encuentra el canal de Streamers. Verifica que el ID sea correcto y el bot tenga permisos de ver y escribir allí.", ephemeral=True)
+            return
 
         embed = discord.Embed(
             title="📺 Postulación a Streamer",
@@ -410,11 +423,8 @@ class StreamerModal(discord.ui.Modal, title="Postulación a Streamer"):
         embed.set_footer(text=f"Zona Roja RP • ID: {interaction.user.id}")
         embed.timestamp = discord.utils.utcnow()
 
-        if channel:
-            await channel.send(embed=embed, view=DecisionReviewView())
-            await interaction.response.send_message("✅ ¡Tu postulación a Streamer fue enviada con éxito!", ephemeral=True)
-        else:
-            await interaction.response.send_message("❌ Error: No se encontró el canal de revisión de Streamers configurado.", ephemeral=True)
+        await channel.send(embed=embed, view=DecisionReviewView())
+        await interaction.response.send_message("✅ ¡Tu postulación a Streamer fue enviada con éxito!", ephemeral=True)
 
 class PostulacionStreamerView(discord.ui.View):
     def __init__(self):
@@ -433,7 +443,7 @@ class FaccionesSelect(discord.ui.Select):
         options = [
             discord.SelectOption(label="Mafias", description="Organizaciones criminales.", emoji="🔫"),
             discord.SelectOption(label="PFA", description="Policía Federal Argentina.", emoji="👮"),
-            discord.SelectOption(label="PROSEGUR", description="Seguridad privada.", emoji="🛡️️"),
+            discord.SelectOption(label="PROSEGUR", description="Seguridad privada.", emoji="🛡️"),
             discord.SelectOption(label="SAME", description="Atención médica de emergencias.", emoji="🚑")
         ]
         super().__init__(placeholder="Seleccioná una facción...", min_values=1, max_values=1, options=options, custom_id="select_facciones")
