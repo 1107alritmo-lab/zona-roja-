@@ -43,6 +43,7 @@ class UltimateBot(commands.Bot):
         self.add_view(PostulacionStaffView())
         self.add_view(PostulacionStreamerView())
         self.add_view(FaccionesSelectView())
+        self.add_view(DecisionReviewView()) 
         await self.tree.sync()
         print("¡Comandos de barra sincronizados y vistas cargadas con éxito!")
 
@@ -215,7 +216,7 @@ class TicketButtonsView(discord.ui.View):
             topic=f"Ticket de {categoria} abierto por {member.name}"
         )
 
-        mencion_staff = rol_staff.mention if rol_staff else "@Staff"
+        mencion_staff = rol_staff.mention if rol_staff else "<@&1520644695779180644>"
         embed_ticket = discord.Embed(
             title=f"{emoji} Ticket de {categoria.capitalize()}",
             description=f"¡Hola {member.mention}!\nHas abierto un ticket de **{categoria}**.\n\nUn miembro de {mencion_staff} te atenderá lo más rápido posible. Por favor, describe tu consulta o inconveniente detalladamente.",
@@ -271,47 +272,75 @@ async def setup_tickets(interaction: discord.Interaction):
 
 
 # ==========================================
-# 4. SISTEMA DE POSTULACIONES
+# 4. SISTEMA DE POSTULACIONES Y REVISIÓN
 # ==========================================
 class DecisionReviewView(discord.ui.View):
-    def __init__(self, postulante: discord.User, tipo: str):
+    def __init__(self):
         super().__init__(timeout=None)
-        self.postulante = postulante
-        self.tipo = tipo
 
-    @discord.ui.button(label="Aceptar", style=discord.ButtonStyle.success, emoji="✅", custom_id="post_aceptar")
+    @discord.ui.button(label="Aceptar", style=discord.ButtonStyle.success, emoji="✅", custom_id="post_aceptar_persistent")
     async def aceptar(self, interaction: discord.Interaction, button: discord.ui.Button):
         await interaction.response.defer()
+        embed = interaction.message.embeds[0]
+        footer_text = embed.footer.text if embed.footer else ""
+        user_id = None
+        for part in footer_text.split("•"):
+            if "ID:" in part:
+                try:
+                    user_id = int(part.replace("ID:", "").strip())
+                except ValueError:
+                    pass
+
         for item in self.children:
             item.disabled = True
-        embed = interaction.message.embeds[0]
+            
         embed.color = discord.Color.green()
         for i, field in enumerate(embed.fields):
             if "Estado" in field.name:
                 embed.set_field_at(i, name="⏳ Estado", value=f"✅ Aceptado por {interaction.user.name}", inline=False)
                 break
+                
         await interaction.message.edit(embed=embed, view=self)
-        try:
-            await self.postulante.send(f"🎉 ¡Felicidades! Tu postulación a **{self.tipo}** ha sido **APROBADA**. Abre ticket en el servidor para continuar.")
-        except Exception as e:
-            print(f"Error MD: {e}")
 
-    @discord.ui.button(label="Rechazar", style=discord.ButtonStyle.danger, emoji="❌", custom_id="post_rechazar")
+        if user_id:
+            try:
+                user = await interaction.client.fetch_user(user_id)
+                if user:
+                    await user.send("🎉 ¡Felicidades! Tu postulación ha sido **APROBADA**. Abre ticket en el servidor para continuar.")
+            except Exception as e:
+                print(f"No se pudo enviar MD al usuario: {e}")
+
+    @discord.ui.button(label="Rechazar", style=discord.ButtonStyle.danger, emoji="❌", custom_id="post_rechazar_persistent")
     async def rechazar(self, interaction: discord.Interaction, button: discord.ui.Button):
         await interaction.response.defer()
+        embed = interaction.message.embeds[0]
+        footer_text = embed.footer.text if embed.footer else ""
+        user_id = None
+        for part in footer_text.split("•"):
+            if "ID:" in part:
+                try:
+                    user_id = int(part.replace("ID:", "").strip())
+                except ValueError:
+                    pass
+
         for item in self.children:
             item.disabled = True
-        embed = interaction.message.embeds[0]
+            
         embed.color = discord.Color.red()
         for i, field in enumerate(embed.fields):
             if "Estado" in field.name:
                 embed.set_field_at(i, name="⏳ Estado", value=f"❌ Rechazado por {interaction.user.name}", inline=False)
                 break
+                
         await interaction.message.edit(embed=embed, view=self)
-        try:
-            await self.postulante.send(f"❌ Hola, tu postulación a **{self.tipo}** ha sido **rechazada** en esta ocasión. ¡Gracias por participar!")
-        except Exception as e:
-            print(f"Error MD: {e}")
+
+        if user_id:
+            try:
+                user = await interaction.client.fetch_user(user_id)
+                if user:
+                    await user.send("❌ Hola, tu postulación ha sido **rechazada** en esta ocasión. ¡Gracias por participar!")
+            except Exception as e:
+                print(f"No se pudo enviar MD al usuario: {e}")
 
 
 class StaffModal(discord.ui.Modal, title="Postulación al Staff"):
@@ -342,13 +371,14 @@ class StaffModal(discord.ui.Modal, title="Postulación al Staff"):
         embed.timestamp = discord.utils.utcnow()
 
         if channel:
-            await channel.send(embed=embed, view=DecisionReviewView(interaction.user, "Staff"))
+            await channel.send(embed=embed, view=DecisionReviewView())
         await interaction.response.send_message("✅ ¡Tu postulación ha sido enviada con éxito!", ephemeral=True)
 
 class PostulacionStaffView(discord.ui.View):
     def __init__(self):
         super().__init__(timeout=None)
-    @discord.ui.button(label="Postularse a Staff", style=discord.ButtonStyle.danger, emoji="🛡️", custom_id="btn_abrir_modal_staff")
+    
+    @discord.ui.button(label="Postularse a Staff", style=discord.ButtonStyle.danger, emoji="🛡️", custom_id="btn_abrir_modal_staff_fixed")
     async def abrir_modal(self, interaction: discord.Interaction, button: discord.ui.Button):
         await interaction.response.send_modal(StaffModal())
 
@@ -379,13 +409,14 @@ class StreamerModal(discord.ui.Modal, title="Postulación a Streamer"):
         embed.timestamp = discord.utils.utcnow()
 
         if channel:
-            await channel.send(embed=embed, view=DecisionReviewView(interaction.user, "Streamer"))
+            await channel.send(embed=embed, view=DecisionReviewView())
         await interaction.response.send_message("✅ ¡Tu postulación a Streamer fue enviada con éxito!", ephemeral=True)
 
 class PostulacionStreamerView(discord.ui.View):
     def __init__(self):
         super().__init__(timeout=None)
-    @discord.ui.button(label="Postularse a Streamer", style=discord.ButtonStyle.primary, emoji="🎥", custom_id="btn_abrir_modal_streamer")
+    
+    @discord.ui.button(label="Postularse a Streamer", style=discord.ButtonStyle.primary, emoji="🎥", custom_id="btn_abrir_modal_streamer_fixed")
     async def abrir_modal(self, interaction: discord.Interaction, button: discord.ui.Button):
         await interaction.response.send_modal(StreamerModal())
 
@@ -398,7 +429,7 @@ class FaccionesSelect(discord.ui.Select):
         options = [
             discord.SelectOption(label="Mafias", description="Organizaciones criminales.", emoji="🔫"),
             discord.SelectOption(label="PFA", description="Policía Federal Argentina.", emoji="👮"),
-            discord.SelectOption(label="PROSEGUR", description="Seguridad privada.", emoji="🛡️️"),
+            discord.SelectOption(label="PROSEGUR", description="Seguridad privada.", emoji="🛡️"),
             discord.SelectOption(label="SAME", description="Atención médica de emergencias.", emoji="🚑")
         ]
         super().__init__(placeholder="Seleccioná una facción...", min_values=1, max_values=1, options=options, custom_id="select_facciones")
