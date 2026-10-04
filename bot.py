@@ -196,7 +196,9 @@ class TicketButtonsView(discord.ui.View):
         super().__init__(timeout=None) 
 
     async def crear_ticket(self, interaction: discord.Interaction, categoria: str, emoji: str):
-        await interaction.response.defer(ephemeral=True)
+        if not interaction.response.is_done():
+            await interaction.response.defer(ephemeral=True)
+            
         guild = interaction.guild
         member = interaction.user
         ROL_STAFF_ID = 1520644695779180644  
@@ -227,7 +229,8 @@ class TicketButtonsView(discord.ui.View):
         class CloseTicketView(discord.ui.View):
             @discord.ui.button(label="Cerrar Ticket", style=discord.ButtonStyle.danger, emoji="🔒")
             async def cerrar(self, inter: discord.Interaction, button: discord.ui.Button):
-                await inter.response.send_message("🔒 Cerrando canal en 5 segundos...")
+                if not inter.response.is_done():
+                    await inter.response.send_message("🔒 Cerrando canal en 5 segundos...")
                 import asyncio
                 await asyncio.sleep(5)
                 await inter.channel.delete()
@@ -235,27 +238,27 @@ class TicketButtonsView(discord.ui.View):
         await ticket_channel.send(content=f"{member.mention} {mencion_staff}", embed=embed_ticket, view=CloseTicketView())
         await interaction.followup.send(f"✅ ¡Tu ticket ha sido creado con éxito! Dirígete a {ticket_channel.mention}", ephemeral=True)
 
-    @discord.ui.button(label="Dudas", style=discord.ButtonStyle.primary, emoji="👤", custom_id="ticket_dudas_zr")
+    @discord.ui.button(label="Dudas", style=discord.ButtonStyle.primary, custom_id="ticket_dudas_zr")
     async def dudas_button(self, interaction: discord.Interaction, button: discord.ui.Button):
-        await self.crear_ticket(interaction, "dudas", "👤")
+        await self.crear_ticket(interaction, "dudas", "💬")
 
-    @discord.ui.button(label="Reportes", style=discord.ButtonStyle.danger, emoji="🚨", custom_id="ticket_reportes_zr")
+    @discord.ui.button(label="Reportes", style=discord.ButtonStyle.danger, custom_id="ticket_reportes_zr")
     async def reportes_button(self, interaction: discord.Interaction, button: discord.ui.Button):
         await self.crear_ticket(interaction, "reportes", "🚨")
 
-    @discord.ui.button(label="Apelar", style=discord.ButtonStyle.secondary, emoji="📋", custom_id="ticket_apelar_zr")
+    @discord.ui.button(label="Apelar", style=discord.ButtonStyle.secondary, custom_id="ticket_apelar_zr")
     async def apelar_button(self, interaction: discord.Interaction, button: discord.ui.Button):
         await self.crear_ticket(interaction, "apelar", "📋")
 
-    @discord.ui.button(label="Donar", style=discord.ButtonStyle.success, emoji="💳", custom_id="ticket_donar_zr")
+    @discord.ui.button(label="Donar", style=discord.ButtonStyle.success, custom_id="ticket_donar_zr")
     async def donar_button(self, interaction: discord.Interaction, button: discord.ui.Button):
         await self.crear_ticket(interaction, "donaciones", "💳")
 
-    @discord.ui.button(label="Streamer", style=discord.ButtonStyle.primary, emoji="📺", custom_id="ticket_streamer_zr")
+    @discord.ui.button(label="Streamer", style=discord.ButtonStyle.primary, custom_id="ticket_streamer_zr")
     async def streamer_button(self, interaction: discord.Interaction, button: discord.ui.Button):
         await self.crear_ticket(interaction, "streamer", "📺")
 
-    @discord.ui.button(label="Tienda", style=discord.ButtonStyle.blurple, emoji="🛒", custom_id="ticket_tienda_zr")
+    @discord.ui.button(label="Tienda", style=discord.ButtonStyle.blurple, custom_id="ticket_tienda_zr")
     async def tienda_button(self, interaction: discord.Interaction, button: discord.ui.Button):
         await self.crear_ticket(interaction, "tienda", "🛒")
 
@@ -278,9 +281,10 @@ class DecisionReviewView(discord.ui.View):
     def __init__(self):
         super().__init__(timeout=None)
 
-    @discord.ui.button(label="Aceptar", style=discord.ButtonStyle.success, emoji="✅", custom_id="post_aceptar_persistent")
+    @discord.ui.button(label="Aceptar", style=discord.ButtonStyle.success, custom_id="post_aceptar_persistent")
     async def aceptar(self, interaction: discord.Interaction, button: discord.ui.Button):
-        await interaction.response.defer()
+        if not interaction.response.is_done():
+            await interaction.response.defer()
         embed = interaction.message.embeds[0]
         footer_text = embed.footer.text if embed.footer else ""
         user_id = None
@@ -310,9 +314,10 @@ class DecisionReviewView(discord.ui.View):
             except Exception as e:
                 print(f"No se pudo enviar MD al usuario: {e}")
 
-    @discord.ui.button(label="Rechazar", style=discord.ButtonStyle.danger, emoji="❌", custom_id="post_rechazar_persistent")
+    @discord.ui.button(label="Rechazar", style=discord.ButtonStyle.danger, custom_id="post_rechazar_persistent")
     async def rechazar(self, interaction: discord.Interaction, button: discord.ui.Button):
-        await interaction.response.defer()
+        if not interaction.response.is_done():
+            await interaction.response.defer()
         embed = interaction.message.embeds[0]
         footer_text = embed.footer.text if embed.footer else ""
         user_id = None
@@ -343,6 +348,7 @@ class DecisionReviewView(discord.ui.View):
                 print(f"No se pudo enviar MD al usuario: {e}")
 
 
+# --- MODAL Y VISTA STAFF ---
 class StaffModal(discord.ui.Modal, title="Postulación al Staff"):
     nombre = discord.ui.TextInput(label="Nombre (OOC)", placeholder="Tu nombre real", required=True)
     edad = discord.ui.TextInput(label="Edad", placeholder="Ej: 18", required=True)
@@ -351,15 +357,14 @@ class StaffModal(discord.ui.Modal, title="Postulación al Staff"):
     motivacion = discord.ui.TextInput(label="Motivación y disponibilidad", style=discord.TextStyle.paragraph, placeholder="¿Por qué querés ser staff?", required=True)
 
     async def on_submit(self, interaction: discord.Interaction):
-        CANAL_REVISION_STAFF = 1556181602181316659
+        CANAL_REVISION_STAFF = 1556181602181316659  # ID de canal exclusivo para Staff
         
-        # Búsqueda directa y forzada del canal en el servidor actual
         channel = interaction.guild.get_channel(CANAL_REVISION_STAFF)
         if not channel:
             channel = interaction.client.get_channel(CANAL_REVISION_STAFF)
 
         if not channel:
-            await interaction.response.send_message("❌ Error: El bot no encuentra el canal de Staff. Verifica que el ID sea correcto y el bot tenga permisos de ver y escribir allí.", ephemeral=True)
+            await interaction.response.send_message("❌ Error: El bot no encuentra el canal de Staff.", ephemeral=True)
             return
 
         embed = discord.Embed(
@@ -385,11 +390,12 @@ class PostulacionStaffView(discord.ui.View):
     def __init__(self):
         super().__init__(timeout=None)
     
-    @discord.ui.button(label="Postularse a Staff", style=discord.ButtonStyle.danger, emoji="🛡️️", custom_id="btn_modal_staff_v2")
+    @discord.ui.button(label="Postularse a Staff", style=discord.ButtonStyle.danger, custom_id="btn_modal_staff_fixed_id")
     async def abrir_modal(self, interaction: discord.Interaction, button: discord.ui.Button):
         await interaction.response.send_modal(StaffModal())
 
 
+# --- MODAL Y VISTA STREAMERS ---
 class StreamerModal(discord.ui.Modal, title="Postulación a Streamer"):
     nombre = discord.ui.TextInput(label="Nombre y Canal", placeholder="Ej: Juan / twitch.tv/tu_canal", required=True)
     plataforma = discord.ui.TextInput(label="Plataforma principal", placeholder="Twitch / Kick / TikTok / YouTube", required=True)
@@ -397,15 +403,14 @@ class StreamerModal(discord.ui.Modal, title="Postulación a Streamer"):
     horarios = discord.ui.TextInput(label="Días y Horarios de Directo", style=discord.TextStyle.paragraph, placeholder="¿Qué días streameas?", required=True)
 
     async def on_submit(self, interaction: discord.Interaction):
-        CANAL_REVISION_STREAMER = 1556181560451932170
+        CANAL_REVISION_STREAMER = 1556181560451932170  # ID de canal exclusivo para Streamers
         
-        # Búsqueda directa y forzada del canal en el servidor actual
         channel = interaction.guild.get_channel(CANAL_REVISION_STREAMER)
         if not channel:
             channel = interaction.client.get_channel(CANAL_REVISION_STREAMER)
 
         if not channel:
-            await interaction.response.send_message("❌ Error: El bot no encuentra el canal de Streamers. Verifica que el ID sea correcto y el bot tenga permisos de ver y escribir allí.", ephemeral=True)
+            await interaction.response.send_message("❌ Error: El bot no encuentra el canal de Streamers.", ephemeral=True)
             return
 
         embed = discord.Embed(
@@ -430,7 +435,7 @@ class PostulacionStreamerView(discord.ui.View):
     def __init__(self):
         super().__init__(timeout=None)
     
-    @discord.ui.button(label="Postularse a Streamer", style=discord.ButtonStyle.primary, emoji="🎥", custom_id="btn_modal_streamer_v2")
+    @discord.ui.button(label="Postularse a Streamer", style=discord.ButtonStyle.primary, custom_id="btn_modal_streamer_fixed_id")
     async def abrir_modal(self, interaction: discord.Interaction, button: discord.ui.Button):
         await interaction.response.send_modal(StreamerModal())
 
@@ -443,7 +448,7 @@ class FaccionesSelect(discord.ui.Select):
         options = [
             discord.SelectOption(label="Mafias", description="Organizaciones criminales.", emoji="🔫"),
             discord.SelectOption(label="PFA", description="Policía Federal Argentina.", emoji="👮"),
-            discord.SelectOption(label="PROSEGUR", description="Seguridad privada.", emoji="🛡️"),
+            discord.SelectOption(label="PROSEGUR", description="Seguridad privada.", emoji="💼"),
             discord.SelectOption(label="SAME", description="Atención médica de emergencias.", emoji="🚑")
         ]
         super().__init__(placeholder="Seleccioná una facción...", min_values=1, max_values=1, options=options, custom_id="select_facciones")
@@ -477,29 +482,33 @@ class EncuestaVotoView(discord.ui.View):
         self.votos_si = set()
         self.votos_no = set()
 
-    @discord.ui.button(label="SI", style=discord.ButtonStyle.success, emoji="✅", custom_id="encuesta_si")
+    @discord.ui.button(label="SI", style=discord.ButtonStyle.success, custom_id="encuesta_si")
     async def votar_si(self, interaction: discord.Interaction, button: discord.ui.Button):
+        if not interaction.response.is_done():
+            await interaction.response.defer(ephemeral=True)
         user_id = interaction.user.id
         if user_id in self.votos_no:
             self.votos_no.remove(user_id)
         if user_id in self.votos_si:
             self.votos_si.remove(user_id)
-            await interaction.response.send_message("❌ Has retirado tu voto.", ephemeral=True)
+            await interaction.followup.send("❌ Has retirado tu voto.", ephemeral=True)
         else:
             self.votos_si.add(user_id)
-            await interaction.response.send_message("✅ ¡Has votado **SI**!", ephemeral=True)
+            await interaction.followup.send("✅ ¡Has votado **SI**!", ephemeral=True)
 
-    @discord.ui.button(label="NO", style=discord.ButtonStyle.danger, emoji="❌", custom_id="encuesta_no")
+    @discord.ui.button(label="NO", style=discord.ButtonStyle.danger, custom_id="encuesta_no")
     async def votar_no(self, interaction: discord.Interaction, button: discord.ui.Button):
+        if not interaction.response.is_done():
+            await interaction.response.defer(ephemeral=True)
         user_id = interaction.user.id
         if user_id in self.votos_si:
             self.votos_si.remove(user_id)
         if user_id in self.votos_no:
             self.votos_no.remove(user_id)
-            await interaction.response.send_message("❌ Has retirado tu voto.", ephemeral=True)
+            await interaction.followup.send("❌ Has retirado tu voto.", ephemeral=True)
         else:
             self.votos_no.add(user_id)
-            await interaction.response.send_message("✅ ¡Has votado **NO**!", ephemeral=True)
+            await interaction.followup.send("✅ ¡Has votado **NO**!", ephemeral=True)
 
 
 class EncuestaModal(discord.ui.Modal, title="Crear Encuesta"):
@@ -638,7 +647,8 @@ class CerrarStreamView(discord.ui.View):
             await interaction.response.send_message("❌ Solo el streamer que inició el directo puede cerrarlo.", ephemeral=True)
             return
 
-        await interaction.response.defer()
+        if not interaction.response.is_done():
+            await interaction.response.defer()
 
         diff_ms = (time.time() - self.start_time) * 1000
         minutes = int((diff_ms / (1000 * 60)) % 60)
@@ -795,5 +805,5 @@ TOKEN = os.getenv("DISCORD_TOKEN")
 if not TOKEN:
     print("❌ ERROR CRÍTICO: No se encontró el token en las variables de entorno.")
 else:
-    TOKEN = os.getenv("DISCORD_TOKEN")
+TOKEN = os.getenv("DISCORD_TOKEN")
 bot.run(TOKEN)
