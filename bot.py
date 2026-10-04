@@ -85,7 +85,7 @@ async def on_member_join(member: discord.Member):
         return
     bienvenidas_recientes[member.id] = tiempo_actual
 
-    CANAL_BIENVENIDA_ID = 1555483618158059622  
+    CANAL_BIENVENIDA_ID = 1520645046456680650  
     ROL_CIVIL_ID = 1520644757724991568         
     CANAL_INVITES_ID = 1556075158383632475
 
@@ -160,7 +160,7 @@ async def on_message(message: discord.Message):
     if message.author.bot or not message.guild:
         return
 
-    CANAL_SUGERENCIAS_ID = 1555501754651516979  
+    CANAL_SUGERENCIAS_ID = 1520645088848384162  
 
     if message.channel.id == CANAL_SUGERENCIAS_ID:
         try:
@@ -198,7 +198,7 @@ class TicketButtonsView(discord.ui.View):
         await interaction.response.defer(ephemeral=True)
         guild = interaction.guild
         member = interaction.user
-        ROL_STAFF_ID = 1555486535657193582  
+        ROL_STAFF_ID = 1520644695779180644  
         rol_staff = guild.get_role(ROL_STAFF_ID)
 
         overwrites = {
@@ -322,11 +322,11 @@ class StaffModal(discord.ui.Modal, title="Postulación al Staff"):
     motivacion = discord.ui.TextInput(label="Motivación y disponibilidad", style=discord.TextStyle.paragraph, placeholder="¿Por qué querés ser staff?", required=True)
 
     async def on_submit(self, interaction: discord.Interaction):
-        CANAL_REVISION_STAFF = 1556074505330491512 
+        CANAL_REVISION_STAFF = 1556181602181316659 
         channel = interaction.guild.get_channel(CANAL_REVISION_STAFF)
 
         embed = discord.Embed(
-            title="✉️️ Postulación al Staff",
+            title="✉️ Postulación al Staff",
             description="Se registró una nueva postulación al Staff.",
             color=discord.Color.from_rgb(241, 196, 15)
         )
@@ -360,7 +360,7 @@ class StreamerModal(discord.ui.Modal, title="Postulación a Streamer"):
     horarios = discord.ui.TextInput(label="Días y Horarios de Directo", style=discord.TextStyle.paragraph, placeholder="¿Qué días streameas?", required=True)
 
     async def on_submit(self, interaction: discord.Interaction):
-        CANAL_REVISION_STREAMER = 1556074480835502132 
+        CANAL_REVISION_STREAMER = 1556181560451932170 
         channel = interaction.guild.get_channel(CANAL_REVISION_STREAMER)
 
         embed = discord.Embed(
@@ -398,7 +398,7 @@ class FaccionesSelect(discord.ui.Select):
         options = [
             discord.SelectOption(label="Mafias", description="Organizaciones criminales.", emoji="🔫"),
             discord.SelectOption(label="PFA", description="Policía Federal Argentina.", emoji="👮"),
-            discord.SelectOption(label="PROSEGUR", description="Seguridad privada.", emoji="🛡️"),
+            discord.SelectOption(label="PROSEGUR", description="Seguridad privada.", emoji="🛡️️"),
             discord.SelectOption(label="SAME", description="Atención médica de emergencias.", emoji="🚑")
         ]
         super().__init__(placeholder="Seleccioná una facción...", min_values=1, max_values=1, options=options, custom_id="select_facciones")
@@ -669,11 +669,86 @@ async def cmd_vivo(interaction: discord.Interaction):
 
 
 # ==========================================
-# 10. INICIO DEL BOT
+# 10. SISTEMA DE NORMATIVAS (/normas)
+# ==========================================
+@bot.tree.command(name="normas", description="Muestra la normativa general oficial de Zona Roja RP")
+async def cmd_normas(interaction: discord.Interaction):
+    await interaction.response.send_message("📖 Enviando la normativa general del servidor...", ephemeral=True)
+    
+    embed1 = discord.Embed(
+        title="📜 NORMATIVA GENERAL – Zona Roja (1/4)",
+        description="**Zona Roja RP** es un servidor de Roleplay que trabaja priorizando el orden, la coherencia y el respeto dentro del entorno de juego.\n\n*Importante: El desconocimiento de esta normativa no exime de su cumplimiento.*",
+        color=discord.Color.from_rgb(255, 0, 0)
+    )
+    embed1.add_field(
+        name="👤 REGISTRO DE PERSONAJE",
+        value="Al ingresar por primera vez, completá tu formulario:\n• Nombre y Apellido (Formato: `Nombre + Apellido`)\n• Fecha de Nacimiento\n• Sexo\n• Altura",
+        inline=False
+    )
+    embed1.add_field(
+        name="🛠️ TRABAJOS DISPONIBLES",
+        value="• **No Faccionales** (Sin entrevista): Basurero, Minero, Pedidos YA, Electricista, Granjero, Mercado Libre.\n• **Faccionales** (Requieren entrevista/examen): PFA, GNA, SAME, MECANICO.\n\n*⚠️ **Protección laboral:** Está prohibido robar, secuestrar o agredir a trabajadores cumpliendo sus funciones.*",
+        inline=False
+    )
+    
+    embed2 = discord.Embed(
+        title="🧠 CONCEPTOS BÁSICOS Y GENERALES DE ROL (2/4)",
+        color=discord.Color.from_rgb(0, 229, 255)
+    )
+    embed2.add_field(
+        name="• IC / OOC / RDI / RDE",
+        value="• **IC:** Todo lo de tu personaje dentro del juego.\n• **OOC:** Vos como jugador fuera del entorno.\n• **RDI (Interpretación):** Actuar acorde a tu ocupación, estatus y contexto.\n• **RDE (Entorno):** Usar la lógica sobre lo que existiría en la vida real (policías, cámaras, médicos, etc.).",
+        inline=False
+    )
+    embed2.add_field(
+        name="• Conceptos Clave",
+        value="• **Valorar la Vida:** No realizar acciones suicidas o absurdas frente a un peligro evidente.\n• **MG (MetaGaming):** Usar información OOC (externa/Discord) dentro del juego IC.\n• **PG (PowerGaming):** Acciones sobrehumanas, abusar de mecánicas o físicas irreales.",
+        inline=False
+    )
+
+    embed3 = discord.Embed(
+        title="⚠️ INFRACCIONES Y REGLAS DE JUEGO (3/4)",
+        color=discord.Color.from_rgb(241, 196, 15)
+    )
+    embed3.add_field(
+        name="• Infracciones Principales",
+        value="• **DM:** Agredir/matar sin motivo válido o contexto previo.\n• **VDM:** Usar vehículos como arma sin justificación.\n• **RK (Revenge Kill):** Volver a buscar venganza o recordar tras morir (esperar mín. 15 min).\n• **Bunny Jump:** Correr y saltar repetidamente para moverse más rápido.\n• **Bug Abuse (BA):** Aprovechar fallos/bugs del servidor.\n• **Evasión de Rol:** Desconectarse o suicidarse para evitar una sanción o situación.\n• **No Salirse del Rol:** Interrumpir el rol con bromas u opiniones OOC.",
+        inline=False
+    )
+
+    embed4 = discord.Embed(
+        title="🔫 TIPOS DE ARMAS Y SANCIONES (4/4)",
+        color=discord.Color.from_rgb(43, 45, 49)
+    )
+    embed4.add_field(
+        name="• Clasificación de Armas",
+        value="• **Blancas:** Bate, Cuchillo, Navaja.\n• **Bajo Calibre:** 9mm, .50, SNS Pistol.\n• **Medio Calibre:** AP, Tec-9, Micro SMG, SMG, Escopeta Recortada, AK Recortada, Gusenberg, Revólver.\n• **Alto Calibre:** AK-47, AK-MK2, Rifle Bullpup, SMG asalto, Carabina.",
+        inline=False
+    )
+    embed4.add_field(
+        name="• Restricciones de Armamento",
+        value="• **Civiles y orgs en ciudad:** Solo bajo calibre semiautomático (9mm, .50, SNS).\n• **Policía/Fuerzas:** Solo Pistola de Combate.\n• **Fuera de ciudad (Sandy/Paleto) y Robos:** Permitido cualquier calibre (EXCEPTO SNIPER).",
+        inline=False
+    )
+    embed4.add_field(
+        name="⚖ SANCIONES",
+        value="Las sanciones varían según el criterio del staff. Faltas graves pueden terminar en baneo permanente. Las sanciones dentro de un mismo reporte son acumulables.",
+        inline=False
+    )
+
+    channel = interaction.channel
+    await channel.send(embed=embed1)
+    await channel.send(embed=embed2)
+    await channel.send(embed=embed3)
+    await channel.send(embed=embed4)
+
+
+# ==========================================
+# 11. INICIO DEL BOT
 # ==========================================
 TOKEN = os.getenv("DISCORD_TOKEN")
 if not TOKEN:
     print("❌ ERROR CRÍTICO: No se encontró el token en las variables de entorno.")
 else:
-   TOKEN = os.getenv("DISCORD_TOKEN")
+    TOKEN = os.getenv("DISCORD_TOKEN")
 bot.run(TOKEN)
